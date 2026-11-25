@@ -42,6 +42,22 @@ Sistema web full-stack diseñado para centralizar la gestión operativa de consu
 
 ---
 
+## Base de Datos Relacional (MySQL — 5 Tablas)
+
+El esquema definido en [`database/schema.sql`](database/schema.sql) utiliza motor `InnoDB` (`utf8mb4_unicode_ci`) con integridad referencial estricta (`ON DELETE CASCADE ON UPDATE CASCADE`) e índices sobre las claves foráneas más consultadas:
+
+| Tabla | Clave Primaria (PK) | Claves Foráneas (FK) | Descripción y Relaciones |
+| :--- | :--- | :--- | :--- |
+| **`Profesionales`** | `id_profesional` | — | Almacena los nutricionistas matriculados (`matricula` y `correo_electronico` únicos, contraseña con hash `bcryptjs`). Se relaciona **1:N** con `Pacientes` y **1:N** con `Planes_Alimenticios`. |
+| **`Pacientes`** | `id_paciente` | `id_profesional` → `Profesionales(id_profesional)` | Guarda datos personales, credenciales de acceso al portal, nivel de actividad, antecedentes médicos y restricciones alimentarias. Pertenece a un único profesional (**N:1**) y tiene **1:N** registros antropométricos y **1:N** planes alimenticios. |
+| **`Registros_Antropometricos`** | `id_registro` | `id_paciente` → `Pacientes(id_paciente)` | Historial de controles por fecha (`peso_kg`, `altura_cm`, `porcentaje_grasa`, `masa_muscular_kg`). Permite calcular dinámicamente el IMC y graficar la evolución de cada paciente (**N:1**). |
+| **`Planes_Alimenticios`** | `id_plan` | `id_paciente` → `Pacientes(id_paciente)`<br>`id_profesional` → `Profesionales(id_profesional)` | Cabecera del plan nutricional (`fecha_creacion`, `objetivo_calorico`, `estado`: `Borrador` \| `Aprobado` \| `Archivado`, `observaciones`). Vincula paciente y profesional, y agrupa **1:N** comidas en `Detalles_Comidas`. El portal del paciente solo expone planes `Aprobado`. |
+| **`Detalles_Comidas`** | `id_detalle` | `id_plan` → `Planes_Alimenticios(id_plan)` | Comidas asignadas por `dia_semana` (`Lunes`–`Domingo`) y `momento_dia` (`Desayuno`–`Colacion`), con descripción de alimentos y gramos de proteína, carbohidratos y grasas (**N:1** con `Planes_Alimenticios`). |
+
+> **Pruebas funcionales:** El detalle de casos verificados (autenticación, rechazo `403`, cálculos IMC/TMB/GET, duplicación, copia de días y alertas de restricciones) se encuentra en [`docs/pruebas-funcionales.md`](docs/pruebas-funcionales.md).
+
+---
+
 ## Instalación y Puesta en Marcha Local
 
 ### Requisitos previos
@@ -85,8 +101,8 @@ npm run dev
 
 ## Equipo de Desarrollo
 
-| Integrante | Usuario de GitHub |
-| :--- | :--- |
-| **Mercado Cáceres José Gustavo** | [@jimy98](https://github.com/jimy98) |
-| **Ruiz Santino Santiago** | [@Santino07-byte](https://github.com/Santino07-byte) |
-| **Ignacio Agustín Mercado** | [@NachoEmme7](https://github.com/NachoEmme7) |
+| Integrante | Usuario de GitHub | Rol |
+| :--- | :--- | :--- |
+| **Mercado Cáceres José Gustavo** | [@jimy98](https://github.com/jimy98) | Desarrollo Full-Stack & Arquitectura |
+| **Ruiz Santino Santiago** | [@Santino07-byte](https://github.com/Santino07-byte) | Frontend UI/UX & Documentación Visual |
+| **Ignacio Agustín Mercado** | [@NachoEmme7](https://github.com/NachoEmme7) | Base de Datos, Pruebas & Documentación API |
